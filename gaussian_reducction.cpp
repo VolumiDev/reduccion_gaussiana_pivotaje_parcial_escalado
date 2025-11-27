@@ -8,7 +8,7 @@
 #include <vector>
 
 namespace {
-
+// Función que valida que se introduce un dato valido, y lo retorna como double
 double readDouble(const std::string& prompt) {
     double value{};
     while (true) {
@@ -17,11 +17,12 @@ double readDouble(const std::string& prompt) {
             return value;
         }
         std::cout << "Error: introduce un numero valido.\n";
-        std::cin.clear();
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::cin.clear(); //limpia el error de pantalla
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //descarta la información en entrada hasta el final de la línea
     }
 }
 
+// Función que valida que se introduce un dato valido, y lo retorna como int
 int readSize(const std::string& prompt) {
     int size{};
     while (true) {
@@ -35,6 +36,7 @@ int readSize(const std::string& prompt) {
     }
 }
 
+// Crea la matriz de la dimensión deseada como vector de vectores y la retorna
 std::vector<std::vector<double>> readMatrix(int rows, int cols, const std::string& name) {
     std::vector<std::vector<double>> matrix(rows, std::vector<double>(cols));
     for (int i = 0; i < rows; ++i) {
@@ -47,6 +49,7 @@ std::vector<std::vector<double>> readMatrix(int rows, int cols, const std::strin
     return matrix;
 }
 
+// Imprime por pantalla una matriz
 void printMatrix(const std::vector<std::vector<double>>& matrix, const std::string& title) {
     std::cout << title << '\n';
     for (const auto& row : matrix) {
@@ -58,33 +61,51 @@ void printMatrix(const std::vector<std::vector<double>>& matrix, const std::stri
     }
 }
 
+//Crea la matriz aumentada añadiendo al a cada una de los vectores los coeficientes y en el ultimo lugar el termino independiente
 std::vector<std::vector<double>> buildAugmented(
     const std::vector<std::vector<double>>& a,
     const std::vector<double>& b) {
     std::vector<std::vector<double>> augmented(a.size(), std::vector<double>(a[0].size() + 1));
     for (std::size_t i = 0; i < a.size(); ++i) {
         for (std::size_t j = 0; j < a[i].size(); ++j) {
-            augmented[i][j] = a[i][j];
+            augmented[i][j] = a[i][j]; //iteramos añadiendo coeficientes
         }
-        augmented[i].back() = b[i];
+        augmented[i].back() = b[i]; //añadimos el termino independiente al final de la "fila"
     }
     return augmented;
 }
 
-void pivot(std::vector<std::vector<double>>& augmented, int pivotIndex) {
+std::vector<double> computeScales(const std::vector<std::vector<double>>& augmented, int n) {
+    std::vector<double> scales(augmented.size(), 0.0);
+    for (std::size_t i = 0; i < augmented.size(); ++i) {
+        double maxAbs = 0.0;
+        for (int j = 0; j < n; ++j) {
+            maxAbs = std::max(maxAbs, std::abs(augmented[i][j]));
+        }
+        if (maxAbs == 0.0) {
+            throw std::runtime_error("El sistema no tiene solucion unica (fila nula).");
+        }
+        scales[i] = maxAbs;
+    }
+    return scales;
+}
+
+void pivot(std::vector<std::vector<double>>& augmented,
+           const std::vector<double>& scales,
+           int pivotIndex) {
     int maxRow = pivotIndex;
-    double maxValue = std::abs(augmented[pivotIndex][pivotIndex]);
+    double maxRatio = std::abs(augmented[pivotIndex][pivotIndex]) / scales[pivotIndex];
     const int n = static_cast<int>(augmented.size());
 
     for (int i = pivotIndex + 1; i < n; ++i) {
-        double candidate = std::abs(augmented[i][pivotIndex]);
-        if (candidate > maxValue) {
-            maxValue = candidate;
+        double ratio = std::abs(augmented[i][pivotIndex]) / scales[i];
+        if (ratio > maxRatio) {
+            maxRatio = ratio;
             maxRow = i;
         }
     }
 
-    if (maxValue == 0.0) {
+    if (maxRatio == 0.0) {
         throw std::runtime_error("El sistema no tiene solucion unica (pivote nulo).");
     }
 
@@ -95,8 +116,9 @@ void pivot(std::vector<std::vector<double>>& augmented, int pivotIndex) {
 
 void forwardElimination(std::vector<std::vector<double>>& augmented) {
     const int n = static_cast<int>(augmented.size());
-    for (int k = 0; k < n - 1; ++k) {
-        pivot(augmented, k);
+    std::vector<double> scales = computeScales(augmented, n);
+    for (int k = 0; k < n - 1; ++k) { // k es el numero de fila
+        pivot(augmented, scales, k);
         for (int i = k + 1; i < n; ++i) {
             double factor = augmented[i][k] / augmented[k][k];
             for (int j = k; j <= n; ++j) { // incluye columna de terminos independientes
@@ -128,11 +150,11 @@ std::vector<double> backSubstitution(const std::vector<std::vector<double>>& aug
 int main() {
     std::cout << std::fixed << std::setprecision(6);
 
-    const int n = readSize("Introduce el tamano de la matriz (numero de ecuaciones):");
-    std::cout << "Primero introduce la matriz de coeficientes A (" << n << "x" << n << "):\n";
+    const int n = readSize("Introduce el tamaño de la matriz:");
+    std::cout << "Primero introduce la matriz de coeficientes A (" << n << "x" << n << "):" << std::endl;
     std::vector<std::vector<double>> matrixA = readMatrix(n, n, "A");
 
-    std::cout << "Ahora introduce el vector de terminos independientes b (" << n << "x1):\n";
+    std::cout << "Ahora introduce el vector de terminos independientes b (" << n << "x1):" << std::endl;
     std::vector<std::vector<double>> vectorBMatrix = readMatrix(n, 1, "b");
 
     std::vector<double> vectorB(n);
@@ -144,16 +166,16 @@ int main() {
         std::vector<std::vector<double>> augmented = buildAugmented(matrixA, vectorB);
         forwardElimination(augmented);
 
-        std::cout << "\nMatriz triangular superior obtenida (A|b):\n";
+        std::cout << "\nMatriz triangular superior obtenida (A|b):" << std::endl;
         printMatrix(augmented, "");
 
         std::vector<double> solution = backSubstitution(augmented);
-        std::cout << "\nSolucion del sistema:\n";
+        std::cout << "\nSolucion del sistema:" << std::endl;
         for (int i = 0; i < n; ++i) {
-            std::cout << "x" << i + 1 << " = " << solution[i] << '\n';
+            std::cout << "x" << i + 1 << " = " << solution[i]  << std::endl;
         }
     } catch (const std::exception& ex) {
-        std::cout << "No se pudo completar la eliminacion: " << ex.what() << '\n';
+        std::cout << "No se pudo completar la eliminacion: " << ex.what() << std::endl;
         return 1;
     }
 
