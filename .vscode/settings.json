@@ -1,8 +1,21 @@
 {
     "files.associations": {
+<<<<<<< HEAD
         "vector": "cpp",
         "limits": "cpp",
         "iostream": "cpp",
         "ostream": "cpp"
+=======
+        "charconv": "cpp",
+        "optional": "cpp",
+        "format": "cpp",
+        "ranges": "cpp",
+        "system_error": "cpp",
+        "array": "cpp",
+        "functional": "cpp",
+        "tuple": "cpp",
+        "type_traits": "cpp",
+        "utility": "cpp"
+>>>>>>> 291c4de9eaaba7725a2cd626a4deb342cfcb02eb
     }
 }
