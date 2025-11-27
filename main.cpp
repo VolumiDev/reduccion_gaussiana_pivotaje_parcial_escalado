@@ -1,161 +1,181 @@
-#include <algorithm>
-#include <cmath>
-#include <iomanip>
 #include <iostream>
 #include <limits>
-#include <stdexcept>
-#include <string>
 #include <vector>
+#include <algorithm>
+#include <cmath>
+using namespace std;
 
-namespace {
+/*
+    Funcion que retorna un float. Tambien realiza la validación de que nos ingresan un dato valido.
+*/
+float input_number(string placeholder)
+{
+    double num;
 
-double readDouble(const std::string& prompt) {
-    double value{};
-    while (true) {
-        std::cout << prompt << '\n';
-        if (std::cin >> value) {
-            return value;
+    do
+    {
+        cout << placeholder << endl;
+
+        if (!(cin >> num))
+        { // Error en caso de que nos ingresen un dato no valido
+            cout << "¡Error! El dato introducido no es valido. Intentelo de nuevo.\n";
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
         }
-        std::cout << "Error: introduce un numero valido.\n";
-        std::cin.clear();
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    }
+        else
+        {
+            break;
+        }
+    } while (true);
+    return num;
 }
 
-int readSize(const std::string& prompt) {
-    int size{};
-    while (true) {
-        std::cout << prompt << '\n';
-        if ((std::cin >> size) && size > 0) {
-            return size;
-        }
-        std::cout << "Error: introduce un entero positivo.\n";
-        std::cin.clear();
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    }
-}
+/*
+    Funcion que genera una matriz de determinadas filas y columnas. Los datos nos los pide por pantalla
+    Retorna la matriz
+*/
+vector<vector<double>> matrix_generator(int rows, int cols)
+{
+    vector<vector<double>> matrix;
 
-std::vector<std::vector<double>> readMatrix(int rows, int cols, const std::string& name) {
-    std::vector<std::vector<double>> matrix(rows, std::vector<double>(cols));
-    for (int i = 0; i < rows; ++i) {
-        for (int j = 0; j < cols; ++j) {
-            std::string prompt = "Introduce " + name + " [" + std::to_string(i + 1) + "," +
-                                 std::to_string(j + 1) + "]:";
-            matrix[i][j] = readDouble(prompt);
+    for (int i = 0; i < rows; i++)
+    {
+        vector<double> current_row;
+        for (int j = 0; j < cols; j++)
+        {
+            string prompt = "Introduce un numero para la fila " + to_string(i + 1) + " columna " + to_string(j + 1) + ":";
+            double value = input_number(prompt);
+            current_row.push_back(value);
         }
+        matrix.push_back(current_row);
     }
     return matrix;
 }
 
-void printMatrix(const std::vector<std::vector<double>>& matrix, const std::string& title) {
-    std::cout << title << '\n';
-    for (const auto& row : matrix) {
-        std::cout << "| ";
-        for (double value : row) {
-            std::cout << std::setw(12) << value << ' ';
+/*
+    Imprime por pantalla la matriz que le pasamos como parámetro.
+*/
+void print_matrix(vector<vector<double>> &matrix, string message = "")
+{
+    cout << message << endl;
+    for (const auto &row : matrix)
+    {
+        int i = 0;
+        cout << "|\t";
+        for (double number : row)
+        {
+            cout << number << "\t";
+            i++;
         }
-        std::cout << "|\n";
+        cout << "|" << endl;
     }
 }
 
-std::vector<std::vector<double>> buildAugmented(
-    const std::vector<std::vector<double>>& a,
-    const std::vector<double>& b) {
-    std::vector<std::vector<double>> augmented(a.size(), std::vector<double>(a[0].size() + 1));
-    for (std::size_t i = 0; i < a.size(); ++i) {
-        for (std::size_t j = 0; j < a[i].size(); ++j) {
-            augmented[i][j] = a[i][j];
-        }
-        augmented[i].back() = b[i];
-    }
-    return augmented;
-}
+void augmented_matrix(vector<vector<double>> main_matrix, vector<vector<double>> independiente_matrix, string message)
+{
+    cout << message << endl;
+    int rows = main_matrix.size();
+    int cols = independiente_matrix.size();
 
-void pivot(std::vector<std::vector<double>>& augmented, int pivotIndex) {
-    int maxRow = pivotIndex;
-    double maxValue = std::abs(augmented[pivotIndex][pivotIndex]);
-    const int n = static_cast<int>(augmented.size());
-
-    for (int i = pivotIndex + 1; i < n; ++i) {
-        double candidate = std::abs(augmented[i][pivotIndex]);
-        if (candidate > maxValue) {
-            maxValue = candidate;
-            maxRow = i;
-        }
-    }
-
-    if (maxValue == 0.0) {
-        throw std::runtime_error("El sistema no tiene solucion unica (pivote nulo).");
-    }
-
-    if (maxRow != pivotIndex) {
-        std::swap(augmented[pivotIndex], augmented[maxRow]);
-    }
-}
-
-void forwardElimination(std::vector<std::vector<double>>& augmented) {
-    const int n = static_cast<int>(augmented.size());
-    for (int k = 0; k < n - 1; ++k) {
-        pivot(augmented, k);
-        for (int i = k + 1; i < n; ++i) {
-            double factor = augmented[i][k] / augmented[k][k];
-            for (int j = k; j <= n; ++j) { // incluye columna de terminos independientes
-                augmented[i][j] -= factor * augmented[k][j];
+    for (int i = 0; i < main_matrix.size(); i++) // filas de la main matrix
+    {
+        for (int j = 0; j < independiente_matrix.size(); j++) // filas de la independient_matrix
+        {
+            for (int z = 0; z < independiente_matrix[j].size(); z++) // columnas de la independient_matrix
+            {
+                main_matrix[i].push_back(independiente_matrix[j][z]);
             }
         }
     }
-    if (std::abs(augmented[n - 1][n - 1]) == 0.0) {
-        throw std::runtime_error("El sistema no tiene solucion unica (pivote final nulo).");
-    }
+    
 }
 
-std::vector<double> backSubstitution(const std::vector<std::vector<double>>& augmented) {
-    const int n = static_cast<int>(augmented.size());
-    std::vector<double> x(n, 0.0);
+double max_abs_value(const std::vector<double>& v) {
+    if (v.empty()) return 0; // o lanza excepción
 
-    for (int i = n - 1; i >= 0; --i) {
-        double sum = augmented[i][n]; // termino independiente
-        for (int j = i + 1; j < n; ++j) {
-            sum -= augmented[i][j] * x[j];
+    auto iterator = std::max_element(
+        v.begin(),
+        v.end(),
+        [](double a, double b) {
+            return std::abs(a) < std::abs(b);
         }
-        x[i] = sum / augmented[i][i];
-    }
-    return x;
+    );
+    return abs(*iterator);
 }
 
-} // namespace
 
-int main() {
-    std::cout << std::fixed << std::setprecision(6);
-
-    const int n = readSize("Introduce el tamano de la matriz (numero de ecuaciones):");
-    std::cout << "Primero introduce la matriz de coeficientes A (" << n << "x" << n << "):\n";
-    std::vector<std::vector<double>> matrixA = readMatrix(n, n, "A");
-
-    std::cout << "Ahora introduce el vector de terminos independientes b (" << n << "x1):\n";
-    std::vector<std::vector<double>> vectorBMatrix = readMatrix(n, 1, "b");
-
-    std::vector<double> vectorB(n);
-    for (int i = 0; i < n; ++i) {
-        vectorB[i] = vectorBMatrix[i][0];
-    }
-
-    try {
-        std::vector<std::vector<double>> augmented = buildAugmented(matrixA, vectorB);
-        forwardElimination(augmented);
-
-        std::cout << "\nMatriz triangular superior obtenida (A|b):\n";
-        printMatrix(augmented, "");
-
-        std::vector<double> solution = backSubstitution(augmented);
-        std::cout << "\nSolucion del sistema:\n";
-        for (int i = 0; i < n; ++i) {
-            std::cout << "x" << i + 1 << " = " << solution[i] << '\n';
-        }
-    } catch (const std::exception& ex) {
-        std::cout << "No se pudo completar la eliminacion: " << ex.what() << '\n';
-        return 1;
-    }
-
-    return 0;
+vector<double> scale_factor(vector<vector<double>> main_matrix){
+    vector<double> scales = {};
+    for (int i = 0; i < main_matrix.size(); i++){
+        auto row = main_matrix[i];
+        auto scale_factor = max_abs_value(row);
+        scales.push_back(scale_factor);
+    };
+    return scales;
 }
+
+vector<int> 
+
+
+
+
+
+int main()
+{
+
+
+    vector<vector<double>> matriz = {
+        { 1.5,   -3.2,   7.0,   -0.5 },
+        { -10.0,  2.3,  -4.4,   8.8 },
+        { 6.1,   -9.9,   0.0,   3.14 },
+        { -2.2,   5.5,  -7.7,  12.0 }
+    };
+
+    vector<double> scales = scale_factor(matriz);
+    for (double x : scales){
+        cout << x << " ";
+    }
+
+
+
+
+return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // std::vector<double> prueba1 = {23, -1.2345, -25.0, 12.0};
+    // std::vector<double> prueba2 = {-100.5, 3.14, 50.2};
+    // std::vector<double> prueba3 = {0.001, -0.002, 0.0005};
+
+    // std::cout << max_abs_value(prueba1) << std::endl;
+    // std::cout << max_abs_value(prueba2) << std::endl;
+    // std::cout << max_abs_value(prueba3) << std::endl;
+
+
+
+    // const int main_row_number = 4;
+    // const int main_col_number = 4;
+    // const int result_row_number = main_row_number;
+    // const int result_col_number = 1;
+
+    // vector<vector<double>> matrix = matrix_generator(main_row_number, main_col_number);
+    // cout << "Ahora introduce la matriz de terminos independientes" << endl;
+    // vector<vector<double>> result_matrix = matrix_generator(result_row_number, result_col_number);
+
+    // print_matrix(matrix, "Matriz principal");
+    // print_matrix(result_matrix, "Matriz de terminos independientes");

@@ -61,6 +61,28 @@ void printMatrix(const std::vector<std::vector<double>>& matrix, const std::stri
     }
 }
 
+double maxAbsValue(const std::vector<double>& v) {
+    if (v.empty()) return 0; // o lanza excepción
+
+    auto iterator = std::max_element(
+        v.begin(),
+        v.end(),
+        [](double a, double b) {
+            return std::abs(a) < std::abs(b);
+        }
+    );
+    return abs(*iterator);
+}
+
+std::vector<double> getScalars(std::vector<std::vector<double>>& a){
+    std::vector<double> scalars (a.size());
+    for (int i = 0; i < a.size(); i++){
+        std::vector<double> row = a[i];
+        scalars[i] = maxAbsValue(row);
+    }
+    return scalars;
+}
+
 //Crea la matriz aumentada añadiendo al a cada una de los vectores los coeficientes y en el ultimo lugar el termino independiente
 std::vector<std::vector<double>> buildAugmented(
     const std::vector<std::vector<double>>& a,
@@ -114,11 +136,11 @@ void pivot(std::vector<std::vector<double>>& augmented,
     }
 }
 
-void forwardElimination(std::vector<std::vector<double>>& augmented) {
+void forwardElimination(std::vector<std::vector<double>>& augmented, std::vector<double>& scalars) {
     const int n = static_cast<int>(augmented.size());
-    std::vector<double> scales = computeScales(augmented, n);
+    // std::vector<double> scales = computeScales(augmented, n);
     for (int k = 0; k < n - 1; ++k) { // k es el numero de fila
-        pivot(augmented, scales, k);
+        pivot(augmented, scalars, k);
         for (int i = k + 1; i < n; ++i) {
             double factor = augmented[i][k] / augmented[k][k];
             for (int j = k; j <= n; ++j) { // incluye columna de terminos independientes
@@ -154,6 +176,12 @@ int main() {
     std::cout << "Primero introduce la matriz de coeficientes A (" << n << "x" << n << "):" << std::endl;
     std::vector<std::vector<double>> matrixA = readMatrix(n, n, "A");
 
+    //Calculamos los factores de cada ecuación
+    std::vector<double> scalarsFactor = getScalars(matrixA);
+    for(double x : scalarsFactor){
+        std::cout << x << std::endl;
+    }
+
     std::cout << "Ahora introduce el vector de terminos independientes b (" << n << "x1):" << std::endl;
     std::vector<std::vector<double>> vectorBMatrix = readMatrix(n, 1, "b");
 
@@ -164,7 +192,7 @@ int main() {
 
     try {
         std::vector<std::vector<double>> augmented = buildAugmented(matrixA, vectorB);
-        forwardElimination(augmented);
+        forwardElimination(augmented, scalarsFactor);
 
         std::cout << "\nMatriz triangular superior obtenida (A|b):" << std::endl;
         printMatrix(augmented, "");
