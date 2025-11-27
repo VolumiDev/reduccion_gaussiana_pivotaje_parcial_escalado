@@ -88,6 +88,14 @@ void augmented_matrix(vector<vector<double>> main_matrix, vector<vector<double>>
     
 }
 
+vector<double> scale_factor(vector<vector<double>> main_matrix){
+    for (int i = 0; i < main_matrix.size(); i++){
+        auto row = main_matrix[i];
+        auto scale_factor = ranges::max_element(row, {}, [](double d){return std::abs(d); });
+    }
+    
+}
+
 
 
 int main()
