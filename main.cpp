@@ -1,6 +1,8 @@
 #include <iostream>
 #include <limits>
 #include <vector>
+#include <algorithm>
+#include <cmath>
 using namespace std;
 
 /*
@@ -88,28 +90,90 @@ void augmented_matrix(vector<vector<double>> main_matrix, vector<vector<double>>
     
 }
 
+double max_abs_value(const std::vector<double>& v) {
+    if (v.empty()) return 0; // o lanza excepción
+
+    auto iterator = std::max_element(
+        v.begin(),
+        v.end(),
+        [](double a, double b) {
+            return std::abs(a) < std::abs(b);
+        }
+    );
+    return abs(*iterator);
+}
+
+
 vector<double> scale_factor(vector<vector<double>> main_matrix){
+    vector<double> scales = {};
     for (int i = 0; i < main_matrix.size(); i++){
         auto row = main_matrix[i];
-        auto scale_factor = ranges::max_element(row, {}, [](double d){return std::abs(d); });
-    }
-    
+        auto scale_factor = max_abs_value(row);
+        scales.push_back(scale_factor);
+    };
+    return scales;
 }
+
+
 
 
 
 int main()
 {
-    const int main_row_number = 4;
-    const int main_col_number = 4;
-    const int result_row_number = main_row_number;
-    const int result_col_number = 1;
 
-    vector<vector<double>> matrix = matrix_generator(main_row_number, main_col_number);
-    cout << "Ahora introduce la matriz de terminos independientes" << endl;
-    vector<vector<double>> result_matrix = matrix_generator(result_row_number, result_col_number);
 
-    print_matrix(matrix, "Matriz principal");
-    print_matrix(result_matrix, "Matriz de terminos independientes");
-    return 0;
+    vector<vector<double>> matriz = {
+        { 1.5,   -3.2,   7.0,   -0.5 },
+        { -10.0,  2.3,  -4.4,   8.8 },
+        { 6.1,   -9.9,   0.0,   3.14 },
+        { -2.2,   5.5,  -7.7,  12.0 }
+    };
+
+    vector<double> scales = scale_factor(matriz);
+    for (double x : scales){
+        cout << x << " ";
+    }
+
+
+
+
+return 0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // std::vector<double> prueba1 = {23, -1.2345, -25.0, 12.0};
+    // std::vector<double> prueba2 = {-100.5, 3.14, 50.2};
+    // std::vector<double> prueba3 = {0.001, -0.002, 0.0005};
+
+    // std::cout << max_abs_value(prueba1) << std::endl;
+    // std::cout << max_abs_value(prueba2) << std::endl;
+    // std::cout << max_abs_value(prueba3) << std::endl;
+
+
+
+    // const int main_row_number = 4;
+    // const int main_col_number = 4;
+    // const int result_row_number = main_row_number;
+    // const int result_col_number = 1;
+
+    // vector<vector<double>> matrix = matrix_generator(main_row_number, main_col_number);
+    // cout << "Ahora introduce la matriz de terminos independientes" << endl;
+    // vector<vector<double>> result_matrix = matrix_generator(result_row_number, result_col_number);
+
+    // print_matrix(matrix, "Matriz principal");
+    // print_matrix(result_matrix, "Matriz de terminos independientes");
 }
