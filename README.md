@@ -1,0 +1,1 @@
+# reduccion_gaussiana_pivotaje_parcial_escalado
